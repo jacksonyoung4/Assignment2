@@ -20,7 +20,7 @@ fun PixabaySearchScreen(vm: ImageViewModel = viewModel()) {
         OutlinedTextField(
             value = state.query,
             onValueChange = vm::updateQuery,
-            label = { Text("Search Open Library") },
+            label = { Text("Search Open Library 2") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(

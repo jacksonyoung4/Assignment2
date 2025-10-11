@@ -11,12 +11,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 
 @Composable
-fun OpenLibrarySearchScreen(vm: ImageViewModel = viewModel()) {
+fun OpenLibrarySearchScreen(navController: NavController, vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
+
         OutlinedTextField(
             value = state.query,
             onValueChange = vm::updateQuery,
@@ -29,7 +31,11 @@ fun OpenLibrarySearchScreen(vm: ImageViewModel = viewModel()) {
 
         Spacer(Modifier.height(12.dp))
 
-        Box(Modifier.fillMaxSize()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f)
+        ) {
             when {
                 state.loading -> {
                     CircularProgressIndicator(Modifier.align(Alignment.Center))
@@ -77,6 +83,19 @@ fun OpenLibrarySearchScreen(vm: ImageViewModel = viewModel()) {
                         }
                     }
                 }
+            }
+        }
+
+        Column(
+            modifier = Modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ){
+            Button(
+                onClick = {
+                    navController.navigate("FavouritesScreen")
+                }) {
+                Text(text = "Go to Favourites")
             }
         }
     }

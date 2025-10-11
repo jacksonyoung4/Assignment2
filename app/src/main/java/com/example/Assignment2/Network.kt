@@ -10,11 +10,11 @@ object Network {
         .addLast(KotlinJsonAdapterFactory())
         .build()
 
-    val api: PixabayApi by lazy {
+    val api: OpenLibraryApi by lazy {
         Retrofit.Builder()
-            .baseUrl("https://pixabay.com/")
+            .baseUrl("https://openlibrary.org/")
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .build()
-            .create(PixabayApi::class.java)
+            .create(OpenLibraryApi::class.java)
     }
 }

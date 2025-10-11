@@ -13,14 +13,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun PixabaySearchScreen(vm: ImageViewModel = viewModel()) {
+fun OpenLibrarySearchScreen(vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
         OutlinedTextField(
             value = state.query,
             onValueChange = vm::updateQuery,
-            label = { Text("Search Open Library 2") },
+            label = { Text("Search Open Library") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
             keyboardActions = androidx.compose.foundation.text.KeyboardActions(
@@ -46,20 +46,33 @@ fun PixabaySearchScreen(vm: ImageViewModel = viewModel()) {
                 }
                 else -> {
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(140.dp),
+                        //columns = GridCells.Adaptive(140.dp),
+                        columns = GridCells.Fixed(1),
                         verticalArrangement = Arrangement.spacedBy(10.dp),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                        horizontalArrangement = Arrangement.Center,
                         modifier = Modifier.fillMaxSize(),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
-                        items(state.results) { hit ->
-                            Card(Modifier.aspectRatio(1f)) {
-                                AsyncImage(
-                                    model = hit.webUrl,
-                                    contentDescription = hit.tags,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.fillMaxSize()
-                                )
+                        items(state.results) { bookDoc ->
+                            Card(Modifier.fillMaxWidth().wrapContentHeight()) {
+                                Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                                    AsyncImage(
+                                        model = bookDoc.coverUrl,
+                                        contentDescription = bookDoc.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier.fillMaxSize().height(180.dp)
+                                    )
+                                    Text(
+                                        text = bookDoc.title ?: ""
+                                    )
+                                    Text(
+
+                                        text = bookDoc.authors?.joinToString(", ") ?: "No author"
+                                    )
+                                    Text(
+                                        text = "${bookDoc.firstPublishYear}"
+                                    )
+                                }
                             }
                         }
                     }

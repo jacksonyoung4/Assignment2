@@ -1,4 +1,4 @@
-package com.example.network_call
+package com.example.Assignment2
 
 import retrofit2.http.GET
 import retrofit2.http.Query

@@ -1,4 +1,4 @@
-package com.example.network_call.ui.theme
+package com.example.Assignment2.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

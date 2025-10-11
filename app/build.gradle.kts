@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.network_call"
+    namespace = "com.example.Assignment2"
     compileSdk = 36
 
     defaultConfig {

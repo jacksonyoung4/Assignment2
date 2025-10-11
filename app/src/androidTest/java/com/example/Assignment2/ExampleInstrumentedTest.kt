@@ -1,4 +1,4 @@
-package com.example.network_call
+package com.example.Assignment2
 
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.ext.junit.runners.AndroidJUnit4

@@ -12,9 +12,10 @@ import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.lifecycle.lifecycleScope
 
 @Composable
-fun OpenLibrarySearchScreen(navController: NavController, vm: ImageViewModel = viewModel()) {
+fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String) -> Unit, vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
 
     Column(Modifier.fillMaxSize().padding(16.dp)) {
@@ -68,16 +69,37 @@ fun OpenLibrarySearchScreen(navController: NavController, vm: ImageViewModel = v
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier.fillMaxSize().height(180.dp)
                                     )
-                                    Text(
-                                        text = bookDoc.title ?: ""
-                                    )
-                                    Text(
 
-                                        text = bookDoc.authors?.joinToString(", ") ?: "No author"
-                                    )
+                                    Spacer(Modifier.height(4.dp))
                                     Text(
-                                        text = "${bookDoc.firstPublishYear}"
+                                        text = bookDoc.title ?: "",
+                                        style = MaterialTheme.typography.titleMedium
                                     )
+
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = bookDoc.authors?.joinToString(", ") ?: "No author",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    Spacer(Modifier.height(4.dp))
+                                    Text(
+                                        text = "${bookDoc.firstPublishYear}",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+
+                                    // Fav Button to add to database
+                                    Spacer(Modifier.height(4.dp))
+                                    Button(
+                                        onClick = {
+                                            val title = bookDoc.title.orEmpty().trim()
+                                            if (title.isNotEmpty()){
+                                                // launch coroutine from view model to keep database out of composable
+                                                addFavourite(title)
+                                            }
+                                        },
+                                        modifier = Modifier.align(Alignment.End)
+                                    ){ Text("Add to favourites") }
                                 }
                             }
                         }

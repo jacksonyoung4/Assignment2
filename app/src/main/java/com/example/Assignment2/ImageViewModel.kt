@@ -15,7 +15,7 @@ data class UiState(
     val results: List<BookDoc> = emptyList()
 )
 
-class ImageViewModel : ViewModel() {
+class ImageViewModel: ViewModel() {
     private val _state = MutableStateFlow(UiState())
     val state: StateFlow<UiState> = _state
 

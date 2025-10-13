@@ -22,7 +22,7 @@ interface BookDAO {
 
     // Get all books
     @Query("SELECT * FROM books")
-    suspend fun getAllBooks(): List<Book>
+    fun getAllBooks(): kotlinx.coroutines.flow.Flow<List<Book>> //coroutine to prevent suspending
 
     // Get books by title
     @Query("SELECT * FROM books WHERE book_title = :bookTitle")

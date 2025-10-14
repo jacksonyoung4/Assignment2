@@ -26,6 +26,21 @@ class MainActivity : ComponentActivity() {
         val cloudDb = Firebase.firestore
         val bookDao = db.bookDao()
 
+        cloudDb.collection("favourites").get()
+            .addOnSuccessListener { result ->
+                lifecycleScope.launch(Dispatchers.IO) {
+                    for (document in result) {
+                        val cloudTitle = document.getString("title").toString()
+                        if(bookDao.getBooksByTitle(cloudTitle).isEmpty()) {
+                            bookDao.insert(Book(title = cloudTitle.trim()))
+                        }
+                    }
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.w(TAG, "Error getting documents.", exception)
+            }
+
         setContent {
             val navController = rememberNavController()
 
@@ -48,7 +63,10 @@ class MainActivity : ComponentActivity() {
                     OpenLibrarySearchScreen(navController, addFavourite = addFavourite)
                 }
                 composable("FavouritesScreen",){
-                    FavouritesScreen(navController, bookDao )
+                    FavouritesScreen(navController, bookDao, cloudDb)
+                }
+                composable("ManualEntryScreen",){
+                    ManualEntryScreen(navController, addFavourite = addFavourite, bookDao)
                 }
             })
         }

@@ -1,5 +1,9 @@
 package com.example.Assignment2
 
+import android.content.ContentValues.TAG
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +17,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.material3.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -23,13 +30,26 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat.getSystemService
+import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.*
 
 
 @Composable
-fun FavouritesScreen(navController: NavController, bookDao: BookDAO){
+fun FavouritesScreen(navController: NavController, bookDao: BookDAO, cloudDb: FirebaseFirestore){
     val books by bookDao.getAllBooks().collectAsState(initial = emptyList())
+
     val scope = rememberCoroutineScope()
+
+    var currentSearch by remember { mutableStateOf("") }
+
+    // Check internet connection
+    val connectivityManager = getSystemService(LocalContext.current, ConnectivityManager::class.java)
+    val currentNetwork = connectivityManager.getActiveNetwork()
+    val caps = connectivityManager.getNetworkCapabilities(currentNetwork)
+    val internetConnected = caps?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true
 
     Column(Modifier
         .fillMaxSize()
@@ -44,11 +64,16 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO){
                 .fillMaxWidth()
                 .padding(16.dp)
         )
-        Button(onClick = {
-            navController.navigate("OpenLibraryScreen")
-        }) {
-            Text(text = "Go to book search")
-        }
+
+        Spacer(Modifier.height(16.dp))
+        // Search box for open library
+        OutlinedTextField(
+            value = currentSearch,
+            onValueChange = { currentSearch = it },
+            label = { Text("Search Favourites") },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth()
+        )
 
         Spacer(Modifier.height(16.dp))
 
@@ -61,24 +86,37 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO){
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(books) { book ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ){
-                        Text(text = "${book.id} - ${book.title}")
-                        Button(
-                            onClick = {
-                                scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                    bookDao.delete(book)  // deletes book from DAO
+                    if (book.title.contains(currentSearch, ignoreCase = true) || currentSearch.isEmpty()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(text = "${book.id} - ${book.title}")
+                            Button(
+                                onClick = {
+                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                        bookDao.delete(book)  // deletes book from DAO
+                                    }
                                 }
+                            ) {
+                                Text("UnFav")
                             }
-                        ){
-                            Text("UnFav")
                         }
                     }
                 }
             }
+        }
+
+        Button(onClick = {
+            if (internetConnected) {
+                navController.navigate("OpenLibraryScreen")
+            }
+            else{
+                navController.navigate("ManualEntryScreen")
+            }
+        }) {
+            Text(text = "Add Books")
         }
     }
 }

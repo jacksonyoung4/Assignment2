@@ -22,7 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 
 @Composable
-fun ManualEntryScreen(navController: NavController, addFavourite: (String) -> Unit, bookDao: BookDAO) {
+fun ManualEntryScreen(navController: NavController, addFavourite: (String, String, Int, Int) -> Unit, bookDao: BookDAO) {
 
     // Search box for open library
     var bookTitle by remember { mutableStateOf("") }
@@ -49,7 +49,7 @@ fun ManualEntryScreen(navController: NavController, addFavourite: (String) -> Un
         TextField(
             value = bookYear,
             onValueChange = { bookYear = it },
-            label = { Text("Enter book year") },
+            label = { Text("Enter book year") }, //currently no checks to ensure int
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -59,8 +59,8 @@ fun ManualEntryScreen(navController: NavController, addFavourite: (String) -> Un
             onClick = {
                 val title = bookTitle
                 if (title.isNotEmpty()) {
-                    addFavourite(bookTitle)
-                }
+                    addFavourite(bookTitle, bookAuthor, bookYear.toInt(), 9278312)  // FG - arbitrary cover
+                }                                                                   // (can make if equal to certain number -> don't show image)
             },
         ) { Text("Add to favourites") }
 

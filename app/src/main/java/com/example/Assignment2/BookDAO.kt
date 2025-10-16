@@ -31,4 +31,7 @@ interface BookDAO {
     // Get book by ID
     @Query("SELECT * FROM books WHERE id = :bookId LIMIT 1")
     suspend fun getBookById(bookId: Long): Book?
+
+    @Query("DELETE FROM books WHERE book_title = :title")
+    suspend fun deleteByTitle(title: String): Int
 }

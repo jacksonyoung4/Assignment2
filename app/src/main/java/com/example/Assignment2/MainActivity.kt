@@ -32,7 +32,7 @@ class MainActivity : ComponentActivity() {
                     for (document in result) {
                         val cloudTitle = document.getString("title").toString()
                         if(bookDao.getBooksByTitle(cloudTitle).isEmpty()) {
-                            bookDao.insert(Book(title = cloudTitle.trim()))
+                            bookDao.insert(Book(title = cloudTitle.trim(), author = "n/a", year = 0, cover = 9278312)) // FG - arbitrary cover for testing
                         }
                     }
                 }
@@ -44,16 +44,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
-            val addFavourite: (String) -> Unit = { title ->
+            val addFavourite: (String, String, Int, Int) -> Unit = { title, author, year, cover ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     if(bookDao.getBooksByTitle(title).isEmpty()) { //no duplicates
-                        bookDao.insert(Book(title = title.trim()))
+                        bookDao.insert(Book(title = title.trim(), author = author.trim(), year = year, cover = cover))
                         val book = hashMapOf(
-                            "title" to title.trim()
+                            "title" to title.trim(),
+                            "author" to author.trim(),
+                            "year" to year,
+                            "cover" to cover
                         )
-                        cloudDb.collection("favourites")
+                        cloudDb.collection("favourites") // TODO - not properly saving in database, add columns? didnt pull extra info from restart
                             .document(title.trim())
                             .set(book, SetOptions.merge())
+                    }
+                    else{
+                        bookDao.deleteByTitle(title.trim())
+                        cloudDb.collection("favourites")
+                            .document(title.trim())
+                            .delete()
                     }
                 }
             }

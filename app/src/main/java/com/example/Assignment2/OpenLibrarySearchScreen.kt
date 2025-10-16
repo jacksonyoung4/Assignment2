@@ -16,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @Composable
-fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String) -> Unit, vm: ImageViewModel = viewModel()) {
+fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String, String, Int, Int) -> Unit, vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
 
     // Get configuration
@@ -120,9 +120,12 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String)
                                         Button(
                                             onClick = {
                                                 val title = bookDoc.title.orEmpty().trim()
+                                                val authors = bookDoc.authors?.joinToString(", ").orEmpty().trim()
+                                                val year = bookDoc.firstPublishYear ?: 0
+                                                val cover = bookDoc.coverId ?: 0
                                                 if (title.isNotEmpty()) {
                                                     // launch coroutine from view model to keep database out of composable
-                                                    addFavourite(title)
+                                                    addFavourite(title, authors, year, cover)
                                                 }
                                             },
                                             modifier = Modifier.align(Alignment.End)

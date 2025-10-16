@@ -35,6 +35,8 @@ import androidx.core.content.ContextCompat.getSystemService
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 
 
 @Composable
@@ -81,26 +83,48 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO, cloudDb: Fi
             Text("No favourites yet.", style = MaterialTheme.typography.bodyLarge)
         } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxWidth().weight(1f), // FG - changed from maxSize as was blocking button, takes remaining space
                 contentPadding = PaddingValues(vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(books) { book ->
                     if (book.title.contains(currentSearch, ignoreCase = true) || currentSearch.isEmpty()) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp)
                         ) {
-                            Text(text = "${book.id} - ${book.title}")
-                            Button(
-                                onClick = {
-                                    scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                                        bookDao.delete(book)  // deletes book from DAO
-                                    }
-                                }
+                            AsyncImage(model = "https://covers.openlibrary.org/b/id/${book.cover}-M.jpg",
+                                contentDescription = book.cover.toString(),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .width(180.dp)
+                                    .height(180.dp)
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Text("UnFav")
+                                Column(
+                                    //modifier = Modifier.fillMaxWidth(),
+                                    verticalArrangement = Arrangement.SpaceBetween,
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(text = "${book.id} - ${book.title}")
+                                    Text(text = "${book.author}")
+                                    Text(text = "${book.year}")
+                                }
+                                Button(
+                                    onClick = {
+                                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
+                                            bookDao.delete(book)  // deletes book from DAO
+                                            // TODO - need to delete from cloud
+                                        }
+                                    }
+                                ) {
+                                    Text("UnFav")
+                                }
                             }
                         }
                     }
@@ -108,7 +132,10 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO, cloudDb: Fi
             }
         }
 
-        Button(onClick = {
+        Button(
+            modifier = Modifier
+                .fillMaxWidth(),
+            onClick = {
             if (internetConnected) {
                 navController.navigate("OpenLibraryScreen")
             }

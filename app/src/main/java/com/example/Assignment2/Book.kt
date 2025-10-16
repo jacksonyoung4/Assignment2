@@ -9,5 +9,11 @@ data class Book(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0L,
     @ColumnInfo(name = "book_title")
-    val title: String
+    val title: String,
+    @ColumnInfo(name = "book_author")
+    val author: String,
+    @ColumnInfo(name = "book_year")
+    val year: Int,
+    @ColumnInfo(name = "cover_i")
+    val cover: Int
 )

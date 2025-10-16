@@ -12,6 +12,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
@@ -41,6 +43,7 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
 
         Spacer(Modifier.height(12.dp))
 
+
         // Box for results
         Box(
             modifier = Modifier
@@ -66,7 +69,6 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
                     Text("No results", modifier = Modifier.align(Alignment.Center))
                 }
 
-
                 else -> {
 
                     LazyVerticalGrid(
@@ -77,7 +79,8 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
                         // Grid layout
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         horizontalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         contentPadding = PaddingValues(bottom = 16.dp)
                     ) {
 
@@ -86,50 +89,56 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
 
                             // Card for each book
                             Card(Modifier.fillMaxWidth().wrapContentHeight()) {
-                                // Phone portrait or landscape
-                                if (!tablet) {
-                                    Column(Modifier.fillMaxWidth().padding(12.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.Start,
+                                    verticalAlignment = Alignment.Top
+                                ) {
+                                    // Phone portrait or landscape
+                                    if (!tablet) {
                                         AsyncImage(
                                             model = bookDoc.coverUrl,
                                             contentDescription = bookDoc.title,
                                             contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize().height(180.dp)
+                                            modifier = Modifier
+                                                .fillMaxWidth(0.5f)
+                                                .wrapContentHeight()
                                         )
-
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            text = bookDoc.title ?: "",
-                                            style = MaterialTheme.typography.titleMedium
-                                        )
-
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            text = bookDoc.authors?.joinToString(", ")
-                                                ?: "No author",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-
-                                        Spacer(Modifier.height(4.dp))
-                                        Text(
-                                            text = "${bookDoc.firstPublishYear}",
-                                            style = MaterialTheme.typography.bodyMedium
-                                        )
-
-                                        // Fav Button to add to database
-                                        Spacer(Modifier.height(4.dp))
-                                        Button(
-                                            onClick = {
-                                                val title = bookDoc.title.orEmpty().trim()
-                                                val authors = bookDoc.authors?.joinToString(", ").orEmpty().trim()
-                                                val year = bookDoc.firstPublishYear ?: 0
-                                                val cover = bookDoc.coverId ?: 0
-                                                if (title.isNotEmpty()) {
-                                                    // launch coroutine from view model to keep database out of composable
-                                                    addFavourite(title, authors, year, cover)
-                                                }
-                                            },
-                                            modifier = Modifier.align(Alignment.End)
-                                        ) { Text("Add to favourites") }
+                                        Column(
+                                            modifier = Modifier
+                                                .padding(16.dp),
+                                            horizontalAlignment = Alignment.Start
+                                        ) {
+                                            Text(
+                                                text = bookDoc.title ?: "",
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 20.sp
+                                            )
+                                            Text(
+                                                text = bookDoc.authors?.joinToString(", ")
+                                                    ?: "No author"
+                                            )
+                                            Text(
+                                                text = "${bookDoc.firstPublishYear}"
+                                            )
+                                            // Fav Button to add to database
+                                            Spacer(Modifier.height(16.dp))
+                                            Button(
+                                                onClick = {
+                                                    val title = bookDoc.title.orEmpty().trim()
+                                                    val authors =
+                                                        bookDoc.authors?.joinToString(", ").orEmpty()
+                                                            .trim()
+                                                    val year = bookDoc.firstPublishYear ?: 0
+                                                    val cover = bookDoc.coverId ?: 0
+                                                    if (title.isNotEmpty()) {
+                                                        // launch coroutine from view model to keep database out of composable
+                                                        addFavourite(title, authors, year, cover)
+                                                    }
+                                                },
+                                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                                            ) { Text("Add Favourite") }
+                                        }
                                     }
                                 }
                             }
@@ -138,18 +147,13 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
                 }
             }
         }
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ){
-            Button(
-                onClick = {
-                    navController.navigate("FavouritesScreen")
-                }) {
-                Text(text = "Go to Favourites")
-            }
+        Button(
+            modifier = Modifier
+                .fillMaxWidth(),
+            onClick = {
+                navController.navigate("FavouritesScreen")
+            }) {
+            Text(text = "Go to Favourites")
         }
     }
 }

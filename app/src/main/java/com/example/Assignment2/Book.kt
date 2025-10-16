@@ -15,5 +15,7 @@ data class Book(
     @ColumnInfo(name = "book_year")
     val year: Int,
     @ColumnInfo(name = "cover_i")
-    val cover: Int
+    val cover: Int,
+    @ColumnInfo(name = "cover_personal")
+    var personal: String = ""
 )

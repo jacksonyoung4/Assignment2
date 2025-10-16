@@ -74,4 +74,5 @@ dependencies {
     implementation("androidx.room:room-runtime:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
 
+    implementation("androidx.activity:activity-compose:1.9.2")
 }

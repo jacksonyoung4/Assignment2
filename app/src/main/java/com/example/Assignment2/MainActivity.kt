@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.Assignment2.ui.theme.NetworkCallTheme
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.firestore
@@ -31,8 +30,12 @@ class MainActivity : ComponentActivity() {
                 lifecycleScope.launch(Dispatchers.IO) {
                     for (document in result) {
                         val cloudTitle = document.getString("title").toString()
+                        val cloudAuthor = document.getString("author").toString()
+                        val cloudYear = document.getLong("year")?.toInt() ?: 0
+                        val cloudCover = document.getLong("cover")?.toInt() ?: 0
+                        val cloudPersonal = document.getString("personal").toString()
                         if(bookDao.getBooksByTitle(cloudTitle).isEmpty()) {
-                            bookDao.insert(Book(title = cloudTitle.trim(), author = "n/a", year = 0, cover = 9278312)) // FG - arbitrary cover for testing
+                            bookDao.insert(Book(title = cloudTitle.trim(), author = cloudAuthor, year = cloudYear, cover = cloudCover, personal = cloudPersonal)) // FG - arbitrary cover for testing
                         }
                     }
                 }
@@ -52,7 +55,8 @@ class MainActivity : ComponentActivity() {
                             "title" to title.trim(),
                             "author" to author.trim(),
                             "year" to year,
-                            "cover" to cover
+                            "cover" to cover,
+                            "personal" to ""
                         )
                         cloudDb.collection("favourites") // TODO - not properly saving in database, add columns? didnt pull extra info from restart
                             .document(title.trim())
@@ -67,12 +71,39 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            val removeFavCloud: (String) -> Unit = { title ->
+                lifecycleScope.launch(Dispatchers.IO) {
+                    cloudDb.collection("favourites").document(title)
+                        .delete()
+                        .addOnSuccessListener {
+                            Log.d(
+                                TAG,
+                                "DocumentSnapshot successfully deleted!"
+                            )
+                        }
+                        .addOnFailureListener { e -> Log.w(TAG, "Error deleting document", e) }
+                }
+            }
+
+            val addPersonalCloud: (String, String) -> Unit = { title, personal ->
+                lifecycleScope.launch(Dispatchers.IO) {
+                    cloudDb.collection("favourites").document(title).update("personal", personal)
+                        .addOnSuccessListener {
+                            Log.d(
+                                TAG,
+                                "DocumentSnapshot successfully deleted!"
+                            )
+                        }
+                        .addOnFailureListener { e -> Log.w(TAG, "Error deleting document", e) }
+                }
+            }
+
             NavHost(navController = navController, startDestination = "FavouritesScreen", builder = {
                 composable("OpenLibraryScreen",){
                     OpenLibrarySearchScreen(navController, addFavourite = addFavourite)
                 }
                 composable("FavouritesScreen",){
-                    FavouritesScreen(navController, bookDao, cloudDb)
+                    FavouritesScreen(navController, bookDao, removeFavCloud = removeFavCloud, addPersonalCloud = addPersonalCloud)
                 }
                 composable("ManualEntryScreen",){
                     ManualEntryScreen(navController, addFavourite = addFavourite, bookDao)

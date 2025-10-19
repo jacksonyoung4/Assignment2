@@ -62,7 +62,7 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO,
 
     // Remember current search and book for if photo it to be taken
     var currentSearch by rememberSaveable { mutableStateOf("") }
-    var photoBook by rememberSaveable { mutableStateOf<Book?>(null) }
+    var photoBook by remember { mutableStateOf<Book?>(null) }
 
     // Remember current book and contact number for share
     var shareBook by remember { mutableStateOf<Book?>(null) }

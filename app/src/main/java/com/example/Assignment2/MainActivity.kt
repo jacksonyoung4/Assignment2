@@ -3,9 +3,11 @@ package com.example.Assignment2
 import android.content.ContentValues.TAG
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -25,6 +27,7 @@ class MainActivity : ComponentActivity() {
         val db = AppDatabase.getDatabase(this)
         val bookDao = db.bookDao()
         val cloudDb = Firebase.firestore
+
 
         // Get favourite books from cloud
         cloudDb.collection("favourites").get()
@@ -54,7 +57,7 @@ class MainActivity : ComponentActivity() {
             val navController = rememberNavController()
 
             // Function for adding favourite book to local and cloud databases
-            val addFavourite: (String, String, Int, Int) -> Unit = { title, author, year, cover ->
+            val toggleFavourite: (String, String, Int, Int) -> Unit = { title, author, year, cover ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     if(bookDao.getBooksByTitle(title).isEmpty()) { // Check book isn't already in database
                         bookDao.insert(Book(title = title.trim(), author = author.trim(), year = year, cover = cover)) // Insert book in DAO
@@ -70,13 +73,15 @@ class MainActivity : ComponentActivity() {
                         cloudDb.collection("favourites")
                             .document(title.trim())
                             .set(book, SetOptions.merge())
+
                     }
-                    // WHAT IS THIS FOR???
+                    // If it already exists, remove book from DAO and Cloud DB
                     else{
                         bookDao.deleteByTitle(title.trim())
                         cloudDb.collection("favourites")
                             .document(title.trim())
                             .delete()
+//                        Toast.makeText(this@MainActivity, "REMOVED from Favourites.", Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -113,13 +118,13 @@ class MainActivity : ComponentActivity() {
             // Start app on favourites screen
             NavHost(navController = navController, startDestination = "FavouritesScreen", builder = {
                 composable("OpenLibraryScreen",){
-                    OpenLibrarySearchScreen(navController, addFavourite = addFavourite)
+                    OpenLibrarySearchScreen(navController, toggleFavourite = toggleFavourite)
                 }
                 composable("FavouritesScreen",){
                     FavouritesScreen(navController, bookDao, removeFavCloud = removeFavCloud, addPersonalCloud = addPersonalCloud)
                 }
                 composable("ManualEntryScreen",){
-                    ManualEntryScreen(navController, addFavourite = addFavourite)
+                    ManualEntryScreen(navController, toggleFavourite = toggleFavourite)
                 }
             })
         }

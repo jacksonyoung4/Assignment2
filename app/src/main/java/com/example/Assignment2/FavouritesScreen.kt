@@ -1,10 +1,13 @@
 package com.example.Assignment2
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
+import android.provider.ContactsContract
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
@@ -40,6 +43,7 @@ import androidx.core.net.toUri
 import coil.compose.AsyncImage
 import java.io.File
 import java.io.FileOutputStream
+import android.Manifest
 
 @Composable
 fun FavouritesScreen(navController: NavController, bookDao: BookDAO,
@@ -59,6 +63,10 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO,
     // Remember current search and book for if photo it to be taken
     var currentSearch by rememberSaveable { mutableStateOf("") }
     var photoBook by rememberSaveable { mutableStateOf<Book?>(null) }
+
+    // Remember current book and contact number for share
+    var shareBook by remember { mutableStateOf<Book?>(null) }
+    var pickedNum by remember {mutableStateOf<String?>(null)}
 
     // Manager for checking internet connection
     val connectivityManager = getSystemService(LocalContext.current, ConnectivityManager::class.java)
@@ -100,6 +108,70 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO,
             }
         }
     )
+
+    // pick contact activity for share function
+    val pickContact = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickContact()
+    ) { contactUri: Uri? ->
+        if (contactUri != null) {
+            // Query contact to get phone number - from workshop 7
+            val contactsProjection = arrayOf(
+                ContactsContract.Contacts._ID,
+                ContactsContract.Contacts.DISPLAY_NAME,
+            )
+            context.contentResolver.query(contactUri, contactsProjection, null, null, null)
+                ?.use { c ->
+                    if (c.moveToFirst()) {
+                        val contactId = c.getString(
+                            c.getColumnIndexOrThrow(ContactsContract.Contacts._ID)
+                        )
+                        val phoneProjection = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                        context.contentResolver.query(
+                            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                            phoneProjection,
+                            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID}=?",
+                            arrayOf(contactId),
+                            null
+                        )?.use { pc ->
+                            pickedNum = if (pc.moveToFirst()) {
+                                pc.getString(
+                                    pc.getColumnIndexOrThrow(
+                                        ContactsContract.CommonDataKinds.Phone.NUMBER
+                                    )
+                                )
+                            } else null
+                        }
+                    }
+                }
+
+            // SMS intent if number and book are valid
+            if (pickedNum != null && shareBook != null) {
+                val smsUri = "smsto:$pickedNum".toUri()
+                val intent = Intent(Intent.ACTION_SENDTO, smsUri).apply {
+                    putExtra(
+                        "sms_body",
+                        "Hey! Check out this cool book: \n\n${shareBook?.title} \n${shareBook?.author}\n ${shareBook?.year.toString()}"
+                    )
+                }
+                context.startActivity(intent)
+            } else {
+                Toast.makeText(context, "Contact error.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    // contact request
+    val requestPermission = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            pickContact.launch(null)
+        }
+        else Toast.makeText(
+            context, "Permission denied",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
 
     Column(Modifier
         .fillMaxSize()
@@ -226,6 +298,17 @@ fun FavouritesScreen(navController: NavController, bookDao: BookDAO,
                                         modifier = Modifier.align(Alignment.CenterHorizontally)
                                     ) {
                                         Text("Take Cover Pic")
+                                    }
+
+                                    // Button to Share Book
+                                    Button(
+                                        onClick = {
+                                            shareBook = book // Assign book for sharing
+                                            requestPermission.launch(Manifest.permission.READ_CONTACTS)// Launch activity for sharing expecting result
+                                        },
+                                        modifier = Modifier.align(Alignment.CenterHorizontally)
+                                    ) {
+                                        Text("Share")
                                     }
                                 }
                             }

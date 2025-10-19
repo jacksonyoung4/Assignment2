@@ -26,7 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ManualEntryScreen(navController: NavController,
-                      addFavourite: (String, String, Int, Int) -> Unit) {
+                      toggleFavourite: (String, String, Int, Int) -> Unit) {
 
     val context = LocalContext.current
 
@@ -85,7 +85,7 @@ fun ManualEntryScreen(navController: NavController,
                 onClick = {
                     val title = bookTitle
                     if (title.isNotEmpty()) {
-                        addFavourite(bookTitle, bookAuthor, bookYear.toInt(), 0)
+                        toggleFavourite(bookTitle, bookAuthor, bookYear.toInt(), 0)
                         Toast.makeText(context, "${bookTitle} added to favourites", Toast.LENGTH_SHORT).show()
                         bookTitle = ""
                         bookAuthor = ""

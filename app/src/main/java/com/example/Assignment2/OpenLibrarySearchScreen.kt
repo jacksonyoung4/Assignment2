@@ -1,6 +1,7 @@
 package com.example.Assignment2
 
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -20,9 +22,10 @@ import androidx.navigation.NavController
 
 @Composable
 fun OpenLibrarySearchScreen(navController: NavController,
-                            addFavourite: (String, String, Int, Int) -> Unit,
+                            toggleFavourite: (String, String, Int, Int) -> Unit,
                             vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
+    val context = LocalContext.current
 
     // Get configuration
     val configuration = LocalConfiguration.current
@@ -139,11 +142,12 @@ fun OpenLibrarySearchScreen(navController: NavController,
                                                 val cover = bookDoc.coverId ?: 0
                                                 if (title.isNotEmpty()) {
                                                     // launch coroutine from view model to keep database out of composable
-                                                    addFavourite(title, authors, year, cover)
+                                                    toggleFavourite(title, authors, year, cover)
                                                 }
+                                                Toast.makeText(context, "${bookDoc.title} Favourite Toggled", Toast.LENGTH_SHORT).show()
                                             },
                                             modifier = Modifier.align(Alignment.CenterHorizontally)
-                                        ) { Text("Add Favourite") }
+                                        ) { Text("Toggle Favourite") }
                                     }
                                 }
                             }

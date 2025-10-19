@@ -1,4 +1,5 @@
 package com.example.Assignment2
+
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,7 +19,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 
 @Composable
-fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String, String, Int, Int) -> Unit, vm: ImageViewModel = viewModel()) {
+fun OpenLibrarySearchScreen(navController: NavController,
+                            addFavourite: (String, String, Int, Int) -> Unit,
+                            vm: ImageViewModel = viewModel()) {
     val state by vm.state.collectAsState()
 
     // Get configuration
@@ -42,7 +45,6 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
         )
 
         Spacer(Modifier.height(12.dp))
-
 
         // Box for results
         Box(
@@ -73,9 +75,9 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
 
                     LazyVerticalGrid(
                         // Number of columns based on orientation
-                        columns = if (isPortrait || tablet)
-                            GridCells.Fixed(1)
-                        else GridCells.Fixed(2),
+                        columns = if (isPortrait && !tablet)
+                            GridCells.Fixed(1) // 1 column for portrait
+                        else GridCells.Fixed(2), // 2 columns for landscape or tablet
                         // Grid layout
                         verticalArrangement = Arrangement.spacedBy(10.dp),
                         horizontalArrangement = Arrangement.Center,
@@ -89,56 +91,59 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
 
                             // Card for each book
                             Card(Modifier.fillMaxWidth().wrapContentHeight()) {
+
+                                // Row for image on left, book info on right
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.Start,
                                     verticalAlignment = Alignment.Top
                                 ) {
-                                    // Phone portrait or landscape
-                                    if (!tablet) {
-                                        AsyncImage(
-                                            model = bookDoc.coverUrl,
-                                            contentDescription = bookDoc.title,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier
-                                                .fillMaxWidth(0.5f)
-                                                .wrapContentHeight()
+
+                                    // Display cover image
+                                    AsyncImage(
+                                        model = bookDoc.coverUrl,
+                                        contentDescription = bookDoc.title,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .fillMaxWidth(0.5f)
+                                            .wrapContentHeight()
+                                    )
+
+                                    // Column for book info
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.Start
+                                    ) {
+                                        Text(
+                                            text = bookDoc.title ?: "",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 20.sp
                                         )
-                                        Column(
-                                            modifier = Modifier
-                                                .padding(16.dp),
-                                            horizontalAlignment = Alignment.Start
-                                        ) {
-                                            Text(
-                                                text = bookDoc.title ?: "",
-                                                fontWeight = FontWeight.Bold,
-                                                fontSize = 20.sp
-                                            )
-                                            Text(
-                                                text = bookDoc.authors?.joinToString(", ")
-                                                    ?: "No author"
-                                            )
-                                            Text(
-                                                text = "${bookDoc.firstPublishYear}"
-                                            )
-                                            // Fav Button to add to database
-                                            Spacer(Modifier.height(16.dp))
-                                            Button(
-                                                onClick = {
-                                                    val title = bookDoc.title.orEmpty().trim()
-                                                    val authors =
-                                                        bookDoc.authors?.joinToString(", ").orEmpty()
-                                                            .trim()
-                                                    val year = bookDoc.firstPublishYear ?: 0
-                                                    val cover = bookDoc.coverId ?: 0
-                                                    if (title.isNotEmpty()) {
-                                                        // launch coroutine from view model to keep database out of composable
-                                                        addFavourite(title, authors, year, cover)
-                                                    }
-                                                },
-                                                modifier = Modifier.align(Alignment.CenterHorizontally)
-                                            ) { Text("Add Favourite") }
-                                        }
+                                        Text(
+                                            text = bookDoc.authors?.joinToString(", ")
+                                                ?: "No author"
+                                        )
+                                        Text(
+                                            text = "${bookDoc.firstPublishYear}"
+                                        )
+                                        // Fav button to add to database
+                                        Spacer(Modifier.height(16.dp))
+                                        Button(
+                                            onClick = {
+                                                val title = bookDoc.title.orEmpty().trim()
+                                                val authors =
+                                                    bookDoc.authors?.joinToString(", ").orEmpty()
+                                                        .trim()
+                                                val year = bookDoc.firstPublishYear ?: 0
+                                                val cover = bookDoc.coverId ?: 0
+                                                if (title.isNotEmpty()) {
+                                                    // launch coroutine from view model to keep database out of composable
+                                                    addFavourite(title, authors, year, cover)
+                                                }
+                                            },
+                                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                                        ) { Text("Add Favourite") }
                                     }
                                 }
                             }
@@ -147,6 +152,8 @@ fun OpenLibrarySearchScreen(navController: NavController, addFavourite: (String,
                 }
             }
         }
+
+        // Button for navigating to favourites screen
         Button(
             modifier = Modifier
                 .fillMaxWidth(),

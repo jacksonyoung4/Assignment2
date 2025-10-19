@@ -8,21 +8,18 @@ import androidx.room.RoomDatabase
 @Database(entities = [Book::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {
 
-    // 1. DAO getters
     abstract fun bookDao(): BookDAO
 
     companion object {
-        // 2. Singleton instance
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
-        // 3. Builder function
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "book_database" // 4. Database file name
+                    "book_database"
                 ).build()
                 INSTANCE = instance
                 instance

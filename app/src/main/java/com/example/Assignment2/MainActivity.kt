@@ -21,21 +21,27 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
+        // Set up databases
         val db = AppDatabase.getDatabase(this)
-        val cloudDb = Firebase.firestore
         val bookDao = db.bookDao()
+        val cloudDb = Firebase.firestore
 
+        // Get favourite books from cloud
         cloudDb.collection("favourites").get()
             .addOnSuccessListener { result ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     for (document in result) {
+
+                        // Get fields from book
                         val cloudTitle = document.getString("title").toString()
                         val cloudAuthor = document.getString("author").toString()
                         val cloudYear = document.getLong("year")?.toInt() ?: 0
                         val cloudCover = document.getLong("cover")?.toInt() ?: 0
                         val cloudPersonal = document.getString("personal").toString()
+
+                        // If book doesn't belong to local data base add it
                         if(bookDao.getBooksByTitle(cloudTitle).isEmpty()) {
-                            bookDao.insert(Book(title = cloudTitle.trim(), author = cloudAuthor, year = cloudYear, cover = cloudCover, personal = cloudPersonal)) // FG - arbitrary cover for testing
+                            bookDao.insert(Book(title = cloudTitle.trim(), author = cloudAuthor, year = cloudYear, cover = cloudCover, personal = cloudPersonal))
                         }
                     }
                 }
@@ -47,10 +53,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navController = rememberNavController()
 
+            // Function for adding favourite book to local and cloud databases
             val addFavourite: (String, String, Int, Int) -> Unit = { title, author, year, cover ->
                 lifecycleScope.launch(Dispatchers.IO) {
-                    if(bookDao.getBooksByTitle(title).isEmpty()) { //no duplicates
-                        bookDao.insert(Book(title = title.trim(), author = author.trim(), year = year, cover = cover))
+                    if(bookDao.getBooksByTitle(title).isEmpty()) { // Check book isn't already in database
+                        bookDao.insert(Book(title = title.trim(), author = author.trim(), year = year, cover = cover)) // Insert book in DAO
+
+                        // Add book to cloud database
                         val book = hashMapOf(
                             "title" to title.trim(),
                             "author" to author.trim(),
@@ -58,10 +67,11 @@ class MainActivity : ComponentActivity() {
                             "cover" to cover,
                             "personal" to ""
                         )
-                        cloudDb.collection("favourites") // TODO - not properly saving in database, add columns? didnt pull extra info from restart
+                        cloudDb.collection("favourites")
                             .document(title.trim())
                             .set(book, SetOptions.merge())
                     }
+                    // WHAT IS THIS FOR???
                     else{
                         bookDao.deleteByTitle(title.trim())
                         cloudDb.collection("favourites")
@@ -71,6 +81,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Remove favourite book from cloud database
             val removeFavCloud: (String) -> Unit = { title ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     cloudDb.collection("favourites").document(title)
@@ -85,6 +96,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Add file path to personal book picture in cloud database
             val addPersonalCloud: (String, String) -> Unit = { title, personal ->
                 lifecycleScope.launch(Dispatchers.IO) {
                     cloudDb.collection("favourites").document(title).update("personal", personal)
@@ -98,6 +110,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
 
+            // Start app on favourites screen
             NavHost(navController = navController, startDestination = "FavouritesScreen", builder = {
                 composable("OpenLibraryScreen",){
                     OpenLibrarySearchScreen(navController, addFavourite = addFavourite)
@@ -106,7 +119,7 @@ class MainActivity : ComponentActivity() {
                     FavouritesScreen(navController, bookDao, removeFavCloud = removeFavCloud, addPersonalCloud = addPersonalCloud)
                 }
                 composable("ManualEntryScreen",){
-                    ManualEntryScreen(navController, addFavourite = addFavourite, bookDao)
+                    ManualEntryScreen(navController, addFavourite = addFavourite)
                 }
             })
         }
